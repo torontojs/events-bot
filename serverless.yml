@@ -1,0 +1,62 @@
+service: torontojs-events-lambda
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**
+
+plugins:
+  - serverless-python-requirements
+
+provider:
+  name: aws
+  runtime: python2.7
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
+    SLACK_CHANNEL: ${env:SLACK_CHANNEL}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  cron:
+    handler: events.check_new.check_events
+    events:
+      - schedule: rate(3 hours)
+  reminder:
+    handler: events.post_reminder.check_reminder
+    events:
+      - schedule: cron(0 14 * * ? *)
+  weekly:
+    handler: events.week_ahead.check_ahead
+    events:
+      - schedule: cron(0 14 ? * MON *)
+
+resources:
+  Resources:
+    TorontoJSEventsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
