@@ -38,7 +38,25 @@ def check_events(event, context):
             resp = req.json()
             logger.info("[%s] Request. Resp %s",
                         call_id, json.dumps(result, indent=4, cls=decimalencoder.DecimalEncoder))
-            new_items = resp['items']
+            if 'error' in resp:
+                logger.warn("[%s] api error %s", call_id, json.dumps(
+                    resp, indent=4, cls=decimalencoder.DecimalEncoder))
+                result = table.update_item(
+                    Key={
+                        'id': call_id,
+                    },
+                    ExpressionAttributeValues={
+                        ':syncToken': None,
+                        ':checkedAt': timestamp,
+                    },
+                    UpdateExpression='SET syncToken = :syncToken, '
+                    'checkedAt = :checkedAt',
+                    ReturnValues='ALL_NEW',
+                )
+                logger.info("[%s] Reset SyncToken")
+                continue
+            else:
+                new_items = resp['items']
             logger.info("[%s] There are %d new events",
                         call_id, len(new_items))
             creator = resp['summary'].replace('Events - ', "")
@@ -56,7 +74,7 @@ def check_events(event, context):
                                 "fields": [
                                     {
                                         "title": "Location",
-                                        "value": item['location'],
+                                        "value": item.get('location', "I don't know"),
                                         "short": True
                                     },
                                     {

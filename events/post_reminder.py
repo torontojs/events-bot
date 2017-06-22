@@ -46,7 +46,7 @@ def check_reminder(event, context):
                                 "fields": [
                                     {
                                         "title": "Location",
-                                        "value": item['location'],
+                                        "value": item.get('location', "I don't know"),
                                         "short": True
                                     },
                                     {
