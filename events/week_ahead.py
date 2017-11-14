@@ -8,12 +8,13 @@ from events.calendars import endpoints
 from events import decimalencoder
 import logging
 import datetime
-from dateutil import parser
+from dateutil import parser, tz
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 webhook_url = os.environ['SLACK_WEBHOOK']
 channel = os.environ.get('SLACK_CHANNEL', '#events-testing')
+est_zone = tz.gettz('America/Toronto')
 
 def check_ahead(event, context):
     """
@@ -33,8 +34,10 @@ def check_ahead(event, context):
                 logger.info("[%s] Event:%s EventTime:%s NowTime:%s Diff:%s", \
                     call_id, item['id'], event_time, now_time, diff_days)
                 if (diff_days >= 0) and (diff_days < 8):
-                    time_str = (event_time - datetime.timedelta(hours=4))\
-                    .strftime("%A, %B %-d at %-I:%M%p")
+                    time_str = event_time\
+                               .replace(tzinfo=datetime.timezone.utc)\
+                               .astimezone(tz=est_zone)\
+                               .strftime("%A, %B %-d at %-I:%M%p")
                     creator = resp['summary'].replace('Events - ', "")
                     title = "{title} by {creator}".format(
                         creator=creator, title=item['summary'])
