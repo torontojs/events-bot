@@ -10,7 +10,8 @@ calIds = [
     'h1tmhrt7ruckpk3ad20jaq55amvaiubu@import.calendar.google.com',
     '7i14k13k6h3a9opbokgmj63k1074gd78@import.calendar.google.com',
     'cmm8uhv8s34d21711h5faa4e3a34napd@import.calendar.google.com',
-    '3usg04moak5e7qejj73mu9u05p2r3rer@import.calendar.google.com'
+    '3usg04moak5e7qejj73mu9u05p2r3rer@import.calendar.google.com',
+    '32clmdbdnjukvbigjs6k174m44hhc7lu@import.calendar.google.com'
 ]
 url_format = "https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events?singleEvents=true&key=AIzaSyA-xW0xIfYvro-zD0JCLRfJwqs6s2MmKmU"
 endpoints = [(calId, url_format.format(calendar_id=calId)) for calId in calIds]
